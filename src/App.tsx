@@ -27,7 +27,7 @@ const allVerses: Verse[] = [
   { id: 'B-2', address: '이사야 53장 6절', text: '우리는 다 양 같아서 그릇 행하여 각기 제 길로 갔거늘 여호와께서는 우리 모두의 죄악을 그에게 담당시키셨도다', group: 'B' },
   { id: 'B-3', address: '로마서 6장 23절', text: '죄의 삯은 사망이요 하나님의 은사는 그리스도 예수 우리 주 안에 있는 영생이니라', group: 'B' },
   { id: 'B-4', address: '히브리서 9장 27절', text: '한번 죽는 것은 사람에게 정해진 것이요 그 후에는 심판이 있으리니', group: 'B' },
-  { id: 'B-5', address: '로마서 5장 8절', text: '우리가 아직 죄인되었을 때에 그리스도께서 우리를 위하여 죽으심으로 하나님께서 우리에 대한 자기의 사랑을 확증하셨느니라', group: 'B' },
+  { id: 'B-5', address: '로마서 5장 8절', text: '우리가 아직 죄인되었을 때에 그리스도께서 우리를 위하여 죽으심으로 하나님께서 우리에 대한 자기의 사랑을 확증하셨느느라', group: 'B' },
   { id: 'B-6', address: '베드로전서 3장 18절', text: '그리스도께서도 단번에 죄를 위하여 죽으사 의인으로서 불의한 자를 대신하셨으니 이는 우리를 하나님 앞으로 인도하려 하심이라 육체로는 죽임을 당하시고 영으로는 살리심을 받으셨으니', group: 'B' },
   { id: 'B-7', address: '에베소서 2장 8,9절', text: '너희는 그 은혜에 의하여 믿음으로 말미암아 구원을 받았으니 이것은 너희에게서 난 것이 아니요 하나님의 선물이라 행위에서 난 것이 아니니 이는 누구든지 자랑하지 못하게 함이라', group: 'B' },
   { id: 'B-8', address: '디도서 3장 5절', text: '우리를 구원하시되 우리가 행한 바 의로운 행위로 말미암지 아니하고 오직 그의 긍휼하심을 따라 중생의 씻음과 성령의 새롭게 하심으로 하셨나니', group: 'B' },
@@ -254,6 +254,21 @@ const getDiff = (original: string, user: string): { nodes: (string | React.React
   return { nodes, errorCount };
 };
 
+// Verse ID를 기준으로 정렬하는 비교 함수
+const sortVersesById = (a: Verse, b: Verse) => {
+  // 그룹 (A, B, C, D, E)을 추출하여 비교
+  const groupA = a.id.split('-')[0];
+  const groupB = b.id.split('-')[0];
+
+  if (groupA < groupB) return -1;
+  if (groupA > groupB) return 1;
+
+  // 그룹이 같으면 숫자 부분을 추출하여 비교
+  const numA = parseInt(a.id.split('-')[1]);
+  const numB = parseInt(b.id.split('-')[1]);
+  return numA - numB;
+};
+
 
 // App 컴포넌트 정의
 const App: React.FC = () => {
@@ -303,9 +318,10 @@ const App: React.FC = () => {
       if (practiceMode) {
         setCurrentPracticeVerses(verses);
       } else {
-        // 실전 모드를 위해 10개의 랜덤 구절을 선택합니다.
+        // 실전 모드를 위해 10개의 랜덤 구절을 선택한 후 ID 순으로 정렬
         const shuffledVerses = [...verses].sort(() => 0.5 - Math.random());
-        setCurrentPracticeVerses(shuffledVerses.slice(0, 10));
+        const selectedAndSortedVerses = shuffledVerses.slice(0, 10).sort(sortVersesById);
+        setCurrentPracticeVerses(selectedAndSortedVerses);
       }
     } else {
       // SPECIFIC 모드일 때는 getVersesForMode가 selectedSpecificVerses에 의존하므로,
@@ -341,7 +357,7 @@ const App: React.FC = () => {
       alert('테스트할 구절을 하나 이상 선택해주세요.'); // 사용자에게 알림
       return;
     }
-    const versesToTest = allVerses.filter(verse => selectedSpecificVerses.includes(verse.id));
+    const versesToTest = allVerses.filter(verse => selectedSpecificVerses.includes(verse.id)).sort(sortVersesById); // 선택된 구절도 정렬
     setCurrentPracticeVerses(versesToTest);
     setCurrentVerseIndex(0);
     setTestResults([]);
@@ -357,8 +373,8 @@ const App: React.FC = () => {
     const currentVerse = currentPracticeVerses[currentVerseIndex];
     const normalizedCorrectAddress = normalizeAddress(currentVerse.address);
     const normalizedUserAddress = normalizeAddress(userInputAddress);
-    const normalizedCorrectText = normalizeText(currentVerse.text);
-    const normalizedUserText = normalizeText(userInputText);
+    // const normalizedCorrectText = normalizeText(currentVerse.text); // 사용 안 함
+    // const normalizedUserText = normalizeText(userInputText); // 사용 안 함
 
     const addressMatch = normalizedCorrectAddress === normalizedUserAddress;
     // 띄어쓰기를 무시하고 텍스트 내용만 비교
@@ -466,7 +482,7 @@ const App: React.FC = () => {
     <div style={styles.appContainer}>
       {/* Header */}
       <header style={styles.header}>
-        <h1 style={styles.headerTitle}>주제별 성경 암송</h1>
+        <h1 style={styles.headerTitle}>성경 암송 앱</h1>
         <div style={styles.headerButtonContainer}>
           <button
             onClick={() => { setMode('PLTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
@@ -835,7 +851,7 @@ const styles = {
     marginBottom: '1.5rem',
     maxHeight: '400px', // 스크롤바를 위한 최대 높이
     overflowY: 'auto' as 'auto', // 스크롤바 추가
-    paddingRight: '1.rem', // 스크롤바 공간 확보
+    paddingRight: '1rem', // 스크롤바 공간 확보
   },
   // verseSelectItem은 App.css로 호버 스타일을 분리하고, 나머지 스타일은 여기에 유지
   verseSelectItem: {
