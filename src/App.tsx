@@ -118,6 +118,12 @@ const normalizeAddress = (address: string) => {
   return normalized;
 };
 
+// 문장 부호 및 특수 문자를 확인하는 헬퍼 함수
+const isPunctuation = (char: string) => {
+  // 일반적인 문장 부호, 한국어 문장 부호, 일부 특수 기호 포함 (공백 제외)
+  return /[.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+\-=|_\\/`]/u.test(char);
+};
+
 // 텍스트를 비교하고 차이점을 반환하는 함수입니다.
 const getDiff = (original: string, user: string): { nodes: (string | React.ReactNode)[], errorCount: number } => {
   const nodes: (string | React.ReactNode)[] = [];
@@ -135,19 +141,23 @@ const getDiff = (original: string, user: string): { nodes: (string | React.React
     const isOriginalSpace = /\s/.test(originalChar);
     const isUserSpace = /\s/.test(userChar);
 
-    // Case 1: 완벽하게 일치하는 경우 (공백이 아닌 문자, 대소문자 구분 없음)
+    const isOriginalPunct = isPunctuation(originalChar);
+    const isUserPunct = isPunctuation(userChar);
+
+    // Case 1: 완벽하게 일치하는 경우 (공백 및 구두점 아닌 문자, 대소문자 구분 없음)
     // 또는 둘 다 공백인 경우 (띄어쓰기는 에러로 처리하지 않음)
     if (originalPtr < original.length && userPtr < user.length &&
         (isOriginalSpace && isUserSpace ||
-         !isOriginalSpace && !isUserSpace && originalChar.toLowerCase() === userChar.toLowerCase())) {
+         (!isOriginalSpace && !isOriginalPunct && !isUserSpace && !isUserPunct && originalChar.toLowerCase() === userChar.toLowerCase()) ||
+         (isOriginalPunct && isUserPunct && originalChar === userChar))) // 동일한 구두점 일치
+    {
       nodes.push(originalChar);
       originalPtr++;
       userPtr++;
-      continue; // 다음 반복으로 이동
+      continue;
     }
 
     // Case 2: 원본은 공백인데 사용자는 공백이 아닌 경우
-    // 원본 공백을 유지하고 원본 포인터만 이동. 사용자 문자는 다음 매칭을 위해 유지.
     if (originalPtr < original.length && isOriginalSpace && !isUserSpace) {
       nodes.push(originalChar);
       originalPtr++;
@@ -155,9 +165,8 @@ const getDiff = (original: string, user: string): { nodes: (string | React.React
     }
 
     // Case 3: 사용자는 공백인데 원본은 공백이 아닌 경우
-    // 사용자 공백을 출력 (하이라이트 없이), 사용자 포인터만 이동.
     if (userPtr < user.length && isUserSpace && !isOriginalSpace) {
-      nodes.push(userChar); // 사용자 공백을 출력 (하이라이트 없음)
+      nodes.push(userChar);
       userPtr++;
       continue;
     }
@@ -170,80 +179,90 @@ const getDiff = (original: string, user: string): { nodes: (string | React.React
     // 삭제 후보인지 확인: 사용자 문자가 원본의 다음 문자(들)와 일치하는가?
     if (originalPtr + 1 < original.length && userPtr < user.length) {
       for (let k = 1; k <= MAX_LOOKAHEAD_CHAR && originalPtr + k < original.length; k++) {
-        // 공백이 아닌 문자를 기준으로 일치 여부 확인
-        if (!/\s/.test(original[originalPtr + k]) && !isUserSpace &&
-            original[originalPtr + k].toLowerCase() === userChar.toLowerCase()) {
+        const nextOriginalChar = original[originalPtr + k];
+        // 공백이나 구두점 아닌, 유의미한 글자로 재동기화 시도
+        if (!/\s/.test(nextOriginalChar) && !isPunctuation(nextOriginalChar) &&
+            !isUserSpace && !isUserPunct &&
+            nextOriginalChar.toLowerCase() === userChar.toLowerCase()) {
           isDeletionCandidate = true;
           break;
         }
       }
     } else if (originalPtr < original.length && userPtr >= user.length) {
-      // 원본에 문자가 남아있고 사용자 입력이 끝난 경우, 남은 원본 문자는 삭제로 간주
+      // 원본에 남은 문자가 있고 사용자 입력이 끝난 경우, 남은 원본 문자는 삭제로 간주
       isDeletionCandidate = true;
     }
 
     // 삽입 후보인지 확인: 원본 문자가 사용자의 다음 문자(들)와 일치하는가?
     if (userPtr + 1 < user.length && originalPtr < original.length) {
       for (let k = 1; k <= MAX_LOOKAHEAD_CHAR && userPtr + k < user.length; k++) {
-        // 공백이 아닌 문자를 기준으로 일치 여부 확인
-        if (!/\s/.test(user[userPtr + k]) && !isOriginalSpace &&
-            originalChar.toLowerCase() === user[userPtr + k].toLowerCase()) {
+        const nextUserChar = user[userPtr + k];
+        // 공백이나 구두점 아닌, 유의미한 글자로 재동기화 시도
+        if (!/\s/.test(nextUserChar) && !isPunctuation(nextUserChar) &&
+            !isOriginalSpace && !isOriginalPunct &&
+            nextUserChar.toLowerCase() === originalChar.toLowerCase()) {
           isInsertionCandidate = true;
           break;
         }
       }
     } else if (userPtr < user.length && originalPtr >= original.length) {
-      // 사용자 입력에 문자가 남아있고 원본이 끝난 경우, 남은 사용자 문자는 삽입으로 간주
+      // 사용자 입력에 남은 문자가 있고 원본이 끝난 경우, 남은 사용자 문자는 삽입으로 간주
       isInsertionCandidate = true;
     }
 
     // 후보 판단에 따라 diff 적용
     if (isDeletionCandidate && !isInsertionCandidate) {
-      // 원본 문자가 삭제된 경우
-      if (!isOriginalSpace) { // 공백이 아닌 경우에만 하이라이트
-        nodes.push(<span key={`del-${originalPtr}`} style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '0 4px' }}>{originalChar}</span>); // 빨간색
+      // 원본 문자 삭제
+      nodes.push(<span key={`del-${originalPtr}`} style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '0 4px' }}>{originalChar}</span>); // 삭제된 원본 문자는 빨간색
+      // 공백이나 구두점이 아닌 유의미한 글자인 경우에만 에러 카운트 증가
+      if (!isOriginalSpace && !isOriginalPunct) {
         errorCount++;
-      } else {
-        nodes.push(originalChar); // 공백은 유지
       }
       originalPtr++;
     } else if (isInsertionCandidate && !isDeletionCandidate) {
-      // 사용자 문자가 삽입된 경우
-      if (!isUserSpace) { // 공백이 아닌 경우에만 하이라이트
-        nodes.push(<span key={`ins-${userPtr}`} style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '0 4px' }}>{userChar}</span>); // 연두색
+      // 사용자 문자 삽입
+      nodes.push(<span key={`ins-${userPtr}`} style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '0 4px' }}>{userChar}</span>); // 삽입된 사용자 문자는 연두색
+      // 공백이나 구두점이 아닌 유의미한 글자인 경우에만 에러 카운트 증가
+      if (!isUserSpace && !isUserPunct) {
         errorCount++;
-      } else {
-        nodes.push(userChar); // 공백은 유지
       }
       userPtr++;
     } else {
-      // 대체(substitution)이거나, 둘 다 삽입/삭제 후보이거나, 한 문자열이 끝난 경우.
-      // 기본적으로 공백이 아닌 문자는 모두 하이라이트하고 포인터 둘 다 이동.
+      // 대체(substitution) 또는 더 복잡한 불일치 (양쪽 모두 후보이거나 모두 아닌 경우)
+      // 이 경우, 두 문자열 모두에서 현재 문자를 소비
       if (originalPtr < original.length) {
-        if (!isOriginalSpace) {
+        // 원본 문자가 유의미한 글자인데 불일치하거나, 구두점 <-> 글자 교환인 경우
+        if ((!isOriginalSpace && !isOriginalPunct && originalChar.toLowerCase() !== userChar.toLowerCase()) ||
+            (!isOriginalPunct && isUserPunct) || // 원본이 글자, 사용자가 구두점
+            (isOriginalPunct && !isUserPunct)) { // 원본이 구두점, 사용자가 글자
           nodes.push(<span key={`sub-orig-${originalPtr}`} style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '0 4px' }}>{originalChar}</span>);
-          errorCount++;
+          // 에러 카운트는 원본이 유의미한 글자일 때만 증가 (구두점 -> 글자 교환 포함)
+          if (!isOriginalPunct || (!isOriginalPunct && isUserPunct)) { // 이 조건은 단순화 가능
+              errorCount++;
+          }
         } else {
+          // 일치하는 경우 (구두점끼리 일치 또는 이미 위에서 처리된 문자) 또는 구두점만 다른 경우
           nodes.push(originalChar);
         }
         originalPtr++;
       }
+
       if (userPtr < user.length) {
-        if (!isUserSpace) { // 원본 문자와 짝을 이루지 못한 사용자 입력 문자도 틀린 것으로 간주 (추가된 문자)
-          // 삽입된 문자에 대해서는 연두색을 사용 (이미 위에서 처리되지만, 재동기화 실패 시 여기로 올 수 있음)
-          // 여기서는 원본 문자가 없는 상태에서 사용자 문자가 남은 경우를 주로 처리
-          // if (!isDeletionCandidate && !isInsertionCandidate && originalPtr >= original.length) { // 이 조건은 필요 없음
-          //   nodes.push(<span key={`sub-user-${userPtr}`} style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '0 4px' }}>{userChar}</span>);
-          //   errorCount++;
-          // } else {
-          //   // 일반적인 대체 상황에서 사용자 문자는 출력만 함
-          //   nodes.push(userChar);
-          // }
-          // 위에 이미 isInsertionCandidate를 통해 처리되었으므로 여기서는 빨간색으로만
-          // 대체된 글자도 빨간색으로 표시하기 위해 여기에 남겨둠
+        // 사용자 문자가 유의미한 글자인데 불일치하거나, 글자 -> 구두점 교환인 경우
+        if ((!isUserSpace && !isUserPunct && originalChar.toLowerCase() !== userChar.toLowerCase()) ||
+            (!isUserPunct && isOriginalPunct) || // 사용자가 글자, 원본이 구두점
+            (isUserPunct && !isOriginalPunct)) { // 사용자가 구두점, 원본이 글자
           nodes.push(<span key={`sub-user-${userPtr}`} style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '0 4px' }}>{userChar}</span>);
-          // errorCount++; // 위에서 originalChar와 함께 이미 증가시켰으므로 여기서는 증가시키지 않음
+          // 에러 카운트는 사용자가 유의미한 글자일 때만 증가 (글자 -> 구두점 교환 포함)
+          if (!isUserPunct || (!isUserPunct && isOriginalPunct)) { // 이 조건은 단순화 가능
+             // 이미 originalPtr 쪽에서 카운트했으므로 여기서는 중복 방지
+             // 만약 originalChar가 없고 userChar만 있다면 (끝까지 왔는데 남은 경우)
+             if (originalPtr >= original.length && !isUserSpace && !isUserPunct) {
+                errorCount++;
+             }
+          }
         } else {
+          // 일치하는 경우 (구두점끼리 일치 또는 이미 위에서 처리된 문자) 또는 구두점만 다른 경우
           nodes.push(userChar);
         }
         userPtr++;
@@ -377,9 +396,9 @@ const App: React.FC = () => {
     // const normalizedUserText = normalizeText(userInputText); // 사용 안 함
 
     const addressMatch = normalizedCorrectAddress === normalizedUserAddress;
-    // 띄어쓰기를 무시하고 텍스트 내용만 비교
-    const contentCorrectText = currentVerse.text.replace(/\s/g, '').toLowerCase();
-    const contentUserText = userInputText.replace(/\s/g, '').toLowerCase();
+    // 띄어쓰기를 무시하고 텍스트 내용만 비교 (구두점도 무시)
+    const contentCorrectText = currentVerse.text.replace(/[\s.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
+    const contentUserText = userInputText.replace(/[\s.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
     const textContentMatch = contentCorrectText === contentUserText;
 
 
@@ -482,7 +501,7 @@ const App: React.FC = () => {
     <div style={styles.appContainer}>
       {/* Header */}
       <header style={styles.header}>
-        <h1 style={styles.headerTitle}>성경 암송 앱</h1>
+        <h1 style={styles.headerTitle}>주제별 성경 암송</h1>
         <div style={styles.headerButtonContainer}>
           <button
             onClick={() => { setMode('PLTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
