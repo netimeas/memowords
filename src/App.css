@@ -1,38 +1,126 @@
-.App {
-  text-align: center;
+/* App.css */
+
+/* 폰트 임포트 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* 전역 스타일 */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6; /* Equivalent to bg-gray-100 */
+  color: #374151; /* Equivalent to text-gray-800 */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* 헤더 버튼 스타일 */
+.header-button {
+  padding: 8px 16px;
+  border-radius: 9999px; /* rounded-full */
+  font-weight: 600; /* font-semibold */
+  transition: all 0.3s ease; /* transition duration-300 */
+}
+.header-button.active {
+  background-color: #2563eb; /* bg-blue-600 */
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+}
+.header-button.inactive {
+  background-color: #e5e7eb; /* bg-gray-200 */
+  color: #4b5563; /* text-gray-700 */
+}
+.header-button.inactive:hover {
+  background-color: #e0f2fe; /* hover:bg-blue-100 */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* 모드 선택 버튼 스타일 */
+.mode-button {
+  padding: 12px 32px;
+  border-radius: 9999px; /* rounded-full */
+  font-size: 1.125rem; /* text-lg */
+  font-weight: 700; /* font-bold */
+  transition: all 0.3s ease; /* transition duration-300 */
+  transform: scale(1);
+}
+.mode-button:hover {
+  transform: scale(1.05); /* hover:scale-105 */
+}
+.mode-button.practice-active {
+  background-color: #16a34a; /* bg-green-600 */
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+}
+.mode-button.practice-inactive {
+  background-color: #e5e7eb; /* bg-gray-200 */
+  color: #4b5563; /* text-gray-700 */
+}
+.mode-button.practice-inactive:hover {
+  background-color: #d1fae5; /* hover:bg-green-100 */
+}
+.mode-button.real-active {
+  background-color: #9333ea; /* bg-purple-600 */
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+}
+.mode-button.real-inactive {
+  background-color: #e5e7eb; /* bg-gray-200 */
+  color: #4b5563; /* text-gray-700 */
+}
+.mode-button.real-inactive:hover {
+  background-color: #f3e8ff; /* hover:bg-purple-100 */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+/* 액션 버튼 스타일 */
+.action-button {
+  padding: 12px 32px;
+  font-weight: 700; /* font-bold */
+  border-radius: 9999px; /* rounded-full */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+  transition: all 0.3s ease; /* transition duration-300 */
+  transform: scale(1);
   color: white;
 }
-
-.App-link {
-  color: #61dafb;
+.action-button:hover {
+  transform: scale(1.05); /* hover:scale-105 */
+}
+.action-button.complete {
+  background-color: #2563eb; /* bg-blue-600 */
+}
+.action-button.complete:hover {
+  background-color: #1d4ed8; /* hover:bg-blue-700 */
+}
+.action-button.reset {
+  background-color: #6b7280; /* bg-gray-500 */
+}
+.action-button.reset:hover {
+  background-color: #4b5563; /* hover:bg-gray-600 */
+}
+.action-button.practice-needed {
+  background-color: #f59e0b; /* bg-yellow-500 */
+}
+.action-button.practice-needed:hover {
+  background-color: #d97706; /* hover:bg-yellow-600 */
+}
+.action-button.recitation-complete {
+  background-color: #10b981; /* bg-green-500 */
+}
+.action-button.recitation-complete:hover {
+  background-color: #059669; /* hover:bg-green-600 */
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 입력 필드 스타일 */
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db; /* border-gray-300 */
+  border-radius: 8px; /* rounded-lg */
+  transition: all 0.2s ease; /* transition duration-200 */
+}
+.input-field:focus {
+  outline: none;
+  border-color: #3b82f6; /* focus:border-blue-500 */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* focus:ring-2 focus:ring-blue-500 */
+}
+
+/* 정답 텍스트 줄바꿈 스타일 추가 */
+.feedback-correct-text {
+  overflow-wrap: break-word; /* 긴 단어 줄바꿈 처리 */
 }
