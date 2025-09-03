@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import './App.css'; // App.css 파일을 임포트합니다.
 
 // 성경 구절 하나의 구조를 정의합니다.
 interface Verse {
@@ -95,7 +94,7 @@ const normalizeAddress = (address: string) => {
     .replace('갈라디아서', '갈')
     .replace('로마서', '롬')
     .replace('디모데후서', '딤후')
-    .replace('여호수아', '여호수아') // 이 책은 일반적인 약어가 없습니다.
+    .replace('여호수아', '수')
     .replace('요한복음', '요')
     .replace('빌립보서', '빌')
     .replace('마태복음', '마')
@@ -107,7 +106,7 @@ const normalizeAddress = (address: string) => {
     .replace('요한일서', '요일')
     .replace('요한계시록', '계')
     .replace('누가복음', '눅')
-    .replace('예레미야애가', '렘애')
+    .replace('예레미야애가', '애')
     .replace('민수기', '민')
     .replace('시편', '시')
     .replace('잠언', '잠')
@@ -370,6 +369,40 @@ const App: React.FC = () => {
     );
   };
 
+  // 파트별 전체 선택/해제 핸들러
+  const handleTogglePart = (part: 'A' | 'B' | 'C' | 'D' | 'E') => {
+    const partVerseIds = allVerses
+      .filter(verse => verse.group === part)
+      .map(verse => verse.id);
+
+    const areAllSelected = partVerseIds.every(id => selectedSpecificVerses.includes(id));
+
+    if (areAllSelected) {
+      // 해당 파트의 모든 구절 선택 해제
+      setSelectedSpecificVerses(prev => prev.filter(id => !partVerseIds.includes(id)));
+    } else {
+      // 해당 파트의 모든 구절 선택 (중복 제거)
+      setSelectedSpecificVerses(prev => {
+        const newSelection = [...prev];
+        partVerseIds.forEach(id => {
+          if (!newSelection.includes(id)) {
+            newSelection.push(id);
+          }
+        });
+        return newSelection.sort(); // 정렬 유지
+      });
+    }
+  };
+
+  // 전체 선택/해제 핸들러
+  const handleToggleSelectAll = () => {
+    if (selectedSpecificVerses.length === allVerses.length) {
+      setSelectedSpecificVerses([]);
+    } else {
+      setSelectedSpecificVerses(allVerses.map(verse => verse.id));
+    }
+  };
+
   // 특정 구절 모드에서 테스트 시작 버튼 핸들러
   const handleStartSpecificTest = () => {
     if (selectedSpecificVerses.length === 0) {
@@ -496,207 +529,384 @@ const App: React.FC = () => {
   };
 
   const currentVerse = currentPracticeVerses[currentVerseIndex];
+  
+  const cssStyles = `
+    /* App.css */
+
+    /* 폰트 임포트 */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+    /* 전역 스타일 */
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6; /* Equivalent to bg-gray-100 */
+      color: #374151; /* Equivalent to text-gray-800 */
+    }
+
+    /* 헤더 버튼 스타일 */
+    .header-button {
+      padding: 8px 16px;
+      border-radius: 9999px; /* rounded-full */
+      font-weight: 600; /* font-semibold */
+      transition: all 0.3s ease; /* transition duration-300 */
+    }
+    .header-button.active {
+      background-color: #2563eb; /* bg-blue-600 */
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    }
+    .header-button.inactive {
+      background-color: #e5e7eb; /* bg-gray-200 */
+      color: #4b5563; /* text-gray-700 */
+    }
+    .header-button.inactive:hover {
+      background-color: #e0f2fe; /* hover:bg-blue-100 */
+    }
+
+    /* 모드 선택 버튼 스타일 */
+    .mode-button {
+      padding: 12px 32px;
+      border-radius: 9999px; /* rounded-full */
+      font-size: 1.125rem; /* text-lg */
+      font-weight: 700; /* font-bold */
+      transition: all 0.3s ease; /* transition duration-300 */
+      transform: scale(1);
+    }
+    .mode-button:hover {
+      transform: scale(1.05); /* hover:scale-105 */
+    }
+    .mode-button.practice-active {
+      background-color: #16a34a; /* bg-green-600 */
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    }
+    .mode-button.practice-inactive {
+      background-color: #e5e7eb; /* bg-gray-200 */
+      color: #4b5563; /* text-gray-700 */
+    }
+    .mode-button.practice-inactive:hover {
+      background-color: #d1fae5; /* hover:bg-green-100 */
+    }
+    .mode-button.real-active {
+      background-color: #9333ea; /* bg-purple-600 */
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+    }
+    .mode-button.real-inactive {
+      background-color: #e5e7eb; /* bg-gray-200 */
+      color: #4b5563; /* text-gray-700 */
+    }
+    .mode-button.real-inactive:hover {
+      background-color: #f3e8ff; /* hover:bg-purple-100 */
+    }
+
+    /* 액션 버튼 스타일 */
+    .action-button {
+      padding: 12px 32px;
+      font-weight: 700; /* font-bold */
+      border-radius: 9999px; /* rounded-full */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+      transition: all 0.3s ease; /* transition duration-300 */
+      transform: scale(1);
+      color: white;
+    }
+    .action-button:hover {
+      transform: scale(1.05); /* hover:scale-105 */
+    }
+    .action-button.complete {
+      background-color: #2563eb; /* bg-blue-600 */
+    }
+    .action-button.complete:hover {
+      background-color: #1d4ed8; /* hover:bg-blue-700 */
+    }
+    .action-button.reset {
+      background-color: #6b7280; /* bg-gray-500 */
+    }
+    .action-button.reset:hover {
+      background-color: #4b5563; /* hover:bg-gray-600 */
+    }
+    .action-button.practice-needed {
+      background-color: #f59e0b; /* bg-yellow-500 */
+    }
+    .action-button.practice-needed:hover {
+      background-color: #d97706; /* hover:bg-yellow-600 */
+    }
+    .action-button.recitation-complete {
+      background-color: #10b981; /* bg-green-500 */
+    }
+    .action-button.recitation-complete:hover {
+      background-color: #059669; /* hover:bg-green-600 */
+    }
+
+    /* 입력 필드 스타일 */
+    .input-field {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db; /* border-gray-300 */
+      border-radius: 8px; /* rounded-lg */
+      transition: all 0.2s ease; /* transition duration-200 */
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: #3b82f6; /* focus:border-blue-500 */
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5); /* focus:ring-2 focus:ring-blue-500 */
+    }
+
+    /* 정답 텍스트 줄바꿈 스타일 추가 */
+    .feedback-correct-text {
+      overflow-wrap: break-word; /* 긴 단어 줄바꿈 처리 */
+    }
+
+    /* 특정 구절 선택 아이템 호버 스타일 */
+    .verse-select-item:hover {
+      background-color: #f3f4f6; /* bg-gray-100 */
+      border-color: #9ca3af; /* border-gray-400 */
+    }
+
+    /* 파트 선택 버튼 스타일 */
+    .part-button {
+      padding: 6px 12px;
+      font-size: 0.875rem; /* text-sm */
+      font-weight: 600; /* font-semibold */
+      border-radius: 9999px; /* rounded-full */
+      border: 1px solid #d1d5db; /* border-gray-300 */
+      background-color: white;
+      color: #374151; /* text-gray-800 */
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .part-button:hover {
+      background-color: #f3f4f6; /* bg-gray-100 */
+      border-color: #9ca3af; /* border-gray-400 */
+    }
+
+    .part-button.all {
+      background-color: #dbeafe; /* bg-blue-100 */
+      border-color: #93c5fd; /* border-blue-300 */
+      color: #1e40af; /* text-blue-800 */
+    }
+
+    .part-button.all:hover {
+      background-color: #bfdbfe; /* bg-blue-200 */
+    }
+  `;
 
   return (
-    <div style={styles.appContainer}>
-      {/* Header */}
-      <header style={styles.header}>
-        <h1 style={styles.headerTitle}>주제별 성경 암송</h1>
-        <div style={styles.headerButtonContainer}>
-          <button
-            onClick={() => { setMode('PLTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
-            className={`header-button ${mode === 'PLTC' ? 'active' : 'inactive'}`}
-          >
-            PLTC
-          </button>
-          <button
-            onClick={() => { setMode('LTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
-            className={`header-button ${mode === 'LTC' ? 'active' : 'inactive'}`}
-          >
-            LTC
-          </button>
-          <button
-            onClick={() => setMode('SPECIFIC')} // 특정 구절 모드 버튼
-            className={`header-button ${mode === 'SPECIFIC' ? 'active' : 'inactive'}`}
-          >
-            특정 구절
-          </button>
-        </div>
-        {/* 초기화 버튼을 우측 상단으로 이동 */}
-        <div style={styles.resetButtonWrapper}>
+    <>
+      <style>{cssStyles}</style>
+      <div style={styles.appContainer}>
+        {/* Header */}
+        <header style={styles.header}>
+          <h1 style={styles.headerTitle}>주제별 성경 암송</h1>
+          <div style={styles.headerButtonContainer}>
             <button
-                onClick={handleReset}
-                className="action-button reset"
+              onClick={() => { setMode('PLTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
+              className={`header-button ${mode === 'PLTC' ? 'active' : 'inactive'}`}
             >
-                초기화
-            </button>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main style={styles.mainContent}>
-        {mode !== 'SPECIFIC' && ( // 특정 구절 모드가 아닐 때만 연습/실전 모드 버튼 표시
-          <div style={styles.modeSelectionContainer}>
-            <button
-              onClick={() => setPracticeMode(true)}
-              className={`mode-button ${practiceMode ? 'practice-active' : 'practice-inactive'}`}
-            >
-              연습 모드
+              PLTC
             </button>
             <button
-              onClick={() => setPracticeMode(false)}
-              className={`mode-button ${!practiceMode ? 'real-active' : 'real-inactive'}`}
+              onClick={() => { setMode('LTC'); setPracticeMode(true); }} // 모드 변경 시 연습 모드로 자동 설정
+              className={`header-button ${mode === 'LTC' ? 'active' : 'inactive'}`}
             >
-              실전 모드
+              LTC
+            </button>
+            <button
+              onClick={() => setMode('SPECIFIC')} // 특정 구절 모드 버튼
+              className={`header-button ${mode === 'SPECIFIC' ? 'active' : 'inactive'}`}
+            >
+              특정 구절
             </button>
           </div>
-        )}
+          {/* 초기화 버튼을 우측 상단으로 이동 */}
+          <div style={styles.resetButtonWrapper}>
+              <button
+                  onClick={handleReset}
+                  className="action-button reset"
+              >
+                  초기화
+              </button>
+          </div>
+        </header>
 
-        {mode === 'SPECIFIC' && currentPracticeVerses.length === 0 && !showSummary ? (
-          // 특정 구절 선택 UI
-          <div style={styles.specificVerseSelectionContainer}>
-            <h2 style={styles.specificVerseSelectionTitle}>테스트할 구절 선택</h2>
-            <div style={styles.verseGrid}>
-              {allVerses.map(verse => (
-                <div key={verse.id} style={styles.verseSelectItem} className="verse-select-item"> {/* className 추가 */}
-                  <input
-                    type="checkbox"
-                    id={`verse-${verse.id}`}
-                    checked={selectedSpecificVerses.includes(verse.id)}
-                    onChange={() => handleToggleSpecificVerse(verse.id)}
-                    style={styles.checkbox}
-                  />
-                  <label htmlFor={`verse-${verse.id}`} style={styles.verseLabel}>
-                    {verse.id}
-                  </label>
+        {/* Main Content Area */}
+        <main style={styles.mainContent}>
+          {mode !== 'SPECIFIC' && ( // 특정 구절 모드가 아닐 때만 연습/실전 모드 버튼 표시
+            <div style={styles.modeSelectionContainer}>
+              <button
+                onClick={() => setPracticeMode(true)}
+                className={`mode-button ${practiceMode ? 'practice-active' : 'practice-inactive'}`}
+              >
+                연습 모드
+              </button>
+              <button
+                onClick={() => setPracticeMode(false)}
+                className={`mode-button ${!practiceMode ? 'real-active' : 'real-inactive'}`}
+              >
+                실전 모드
+              </button>
+            </div>
+          )}
+
+          {mode === 'SPECIFIC' && currentPracticeVerses.length === 0 && !showSummary ? (
+            // 특정 구절 선택 UI
+            <div style={styles.specificVerseSelectionContainer}>
+              <h2 style={styles.specificVerseSelectionTitle}>테스트할 구절 선택</h2>
+              {/* 파트별/전체 선택 버튼 */}
+              <div style={styles.partSelectionContainer}>
+                  {(['A', 'B', 'C', 'D', 'E'] as const).map(part => (
+                      <button key={part} onClick={() => handleTogglePart(part)} className="part-button">
+                          Part {part}
+                      </button>
+                  ))}
+                  <button onClick={handleToggleSelectAll} className="part-button all">
+                      {selectedSpecificVerses.length === allVerses.length ? '전체 해제' : '전체 선택'}
+                  </button>
+              </div>
+              <div style={styles.verseGrid}>
+                {allVerses.map(verse => (
+                  <div key={verse.id} style={styles.verseSelectItem} className="verse-select-item"> {/* className 추가 */}
+                    <input
+                      type="checkbox"
+                      id={`verse-${verse.id}`}
+                      checked={selectedSpecificVerses.includes(verse.id)}
+                      onChange={() => handleToggleSpecificVerse(verse.id)}
+                      style={styles.checkbox}
+                    />
+                    <label htmlFor={`verse-${verse.id}`} style={styles.verseLabel}>
+                      {verse.id}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={handleStartSpecificTest}
+                className="action-button complete"
+                style={{ marginTop: '2rem' }}
+              >
+                테스트 시작 ({selectedSpecificVerses.length}개)
+              </button>
+            </div>
+          ) : showSummary ? (
+            <div style={styles.summaryContainer}>
+              <h2 style={styles.summaryTitle}>테스트 결과 요약</h2>
+              {testResults.map((result, index) => (
+                <div key={index} style={styles.summaryItem}>
+                  <p style={styles.summaryItemTitle}>{result.id}: {result.correct ? <span style={{ color: '#10b981' }}>정답</span> : <span style={{ color: '#ef4444' }}>오답</span>}</p>
+                  {!result.correct && result.diff.length > 0 && (
+                    <>
+                      <p style={{ marginTop: '0.5rem' }}>원문:</p>
+                      <div style={{ backgroundColor: '#f3f4f6', padding: '0.5rem', borderRadius: '0.375rem', fontFamily: 'monospace', fontSize: '0.875rem', textAlign: 'left' }}>
+                        {allVerses.find(v => v.id === result.id)?.text}
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
-            <button
-              onClick={handleStartSpecificTest}
-              className="action-button complete"
-              style={{ marginTop: '2rem' }}
-            >
-              테스트 시작
-            </button>
-          </div>
-        ) : showSummary ? (
-          <div style={styles.summaryContainer}>
-            <h2 style={styles.summaryTitle}>테스트 결과 요약</h2>
-            {testResults.map((result, index) => (
-              <div key={index} style={styles.summaryItem}>
-                <p style={styles.summaryItemTitle}>{result.id}: {result.correct ? <span style={{ color: '#10b981' }}>정답</span> : <span style={{ color: '#ef4444' }}>오답</span>}</p>
-                {!result.correct && result.diff.length > 0 && (
-                  <>
-                    <p style={{ marginTop: '0.5rem' }}>원문:</p>
-                    <div style={{ backgroundColor: '#f3f4f6', padding: '0.5rem', borderRadius: '0.375rem', fontFamily: 'monospace', fontSize: '0.875rem', textAlign: 'left' }}>
-                      {allVerses.find(v => v.id === result.id)?.text}
-                    </div>
-                  </>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          currentVerse ? (
-            <>
-              {/* 현재 구절 ID */}
-              <div style={styles.currentVerseId}>
-                <p style={styles.currentVerseIdText}>
-                  <span style={styles.currentVerseIdNumber}>{currentVerse.id}</span>
-                  {` (${currentVerseIndex + 1}/${currentPracticeVerses.length})`}
-                </p>
-              </div>
-
-              {/* 입력 필드 */}
-              <div style={styles.inputGroup}>
-                <label htmlFor="address" style={styles.inputLabel}>주소</label>
-                <input
-                  type="text"
-                  id="address"
-                  ref={addressInputRef}
-                  value={userInputAddress}
-                  onChange={(e) => setUserInputAddress(e.target.value)}
-                  className="input-field"
-                  placeholder="예: 창 1:1 또는 창세기 1장 1절"
-                />
-              </div>
-
-              <div style={styles.inputGroup}>
-                <label htmlFor="text" style={styles.inputLabel}>본문</label>
-                <textarea
-                  id="text"
-                  ref={textInputRef}
-                  value={userInputText}
-                  onChange={(e) => setUserInputText(e.target.value)}
-                  rows={8}
-                  className="input-field"
-                  style={{ resize: 'vertical' }}
-                  placeholder="구절의 본문을 입력하세요."
-                ></textarea>
-              </div>
-
-              {/* 액션 버튼 */}
-              <div style={styles.actionButtonContainer}>
-                <button
-                  onClick={handleComplete}
-                  className="action-button complete"
-                >
-                  완료
-                </button>
-              </div>
-
-              {/* 피드백 섹션 */}
-              {showAnswer && (
-                <div style={styles.feedbackSection}>
-                  <h3 style={styles.feedbackTitle}>정답</h3>
-                  <div style={styles.feedbackVerseInfo}>
-                    <p style={styles.feedbackAddress}>주소: <span style={{ color: isCorrectAddress ? '#10b981' : '#ef4444' }}>{currentVerse.address}</span></p>
-                    <p style={styles.feedbackTextLabel}>본문:</p>
-                    {/* feedbackCorrectText 스타일 적용을 위해 className 추가 */}
-                    <p style={styles.feedbackCorrectText} className="feedback-correct-text">{currentVerse.text}</p>
-                  </div>
-                  {feedbackMessage && (
-                    <div style={{
-                      marginTop: '1rem',
-                      padding: '0.75rem',
-                      borderRadius: '0.375rem',
-                      fontWeight: '600',
-                      backgroundColor: (isCorrectText && isCorrectAddress) ? '#d1fae5' : '#fee2e2', /* bg-green-100 / bg-red-100 */
-                      color: (isCorrectText && isCorrectAddress) ? '#065f46' : '#991b1b', /* text-green-700 / text-red-700 */
-                    }}>
-                      {feedbackMessage}
-                    </div>
-                  )}
-
-                  {/* '특정 구절' 모드에서는 '연습 필요', '암송 완료' 버튼을 숨깁니다. */}
-                  {mode !== 'SPECIFIC' && (
-                    <div style={styles.practiceButtonContainer}>
-                      <button
-                        onClick={handleNeedsPractice}
-                        className="action-button practice-needed"
-                      >
-                        연습 필요
-                      </button>
-                      <button
-                        onClick={handleRecitationComplete}
-                        className="action-button recitation-complete"
-                      >
-                        암송 완료
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
           ) : (
-            <div style={styles.noVerseMessage}>
-              선택된 모드에 해당하는 구절이 없습니다.
-            </div>
-          )
-        )}
-      </main>
-    </div>
+            currentVerse ? (
+              <>
+                {/* 현재 구절 ID */}
+                <div style={styles.currentVerseId}>
+                  <p style={styles.currentVerseIdText}>
+                    <span style={styles.currentVerseIdNumber}>{currentVerse.id}</span>
+                    {` (${currentVerseIndex + 1}/${currentPracticeVerses.length})`}
+                  </p>
+                </div>
+
+                {/* 입력 필드 */}
+                <div style={styles.inputGroup}>
+                  <label htmlFor="address" style={styles.inputLabel}>주소</label>
+                  <input
+                    type="text"
+                    id="address"
+                    ref={addressInputRef}
+                    value={userInputAddress}
+                    onChange={(e) => setUserInputAddress(e.target.value)}
+                    className="input-field"
+                    placeholder="예: 창 1:1 또는 창세기 1장 1절"
+                  />
+                </div>
+
+                <div style={styles.inputGroup}>
+                  <label htmlFor="text" style={styles.inputLabel}>본문</label>
+                  <textarea
+                    id="text"
+                    ref={textInputRef}
+                    value={userInputText}
+                    onChange={(e) => setUserInputText(e.target.value)}
+                    rows={8}
+                    className="input-field"
+                    style={{ resize: 'vertical' }}
+                    placeholder="구절의 본문을 입력하세요."
+                  ></textarea>
+                </div>
+
+                {/* 액션 버튼 */}
+                <div style={styles.actionButtonContainer}>
+                  <button
+                    onClick={handleComplete}
+                    className="action-button complete"
+                  >
+                    완료
+                  </button>
+                </div>
+
+                {/* 피드백 섹션 */}
+                {showAnswer && (
+                  <div style={styles.feedbackSection}>
+                    <h3 style={styles.feedbackTitle}>정답</h3>
+                    <div style={styles.feedbackVerseInfo}>
+                      <p style={styles.feedbackAddress}>주소: <span style={{ color: isCorrectAddress ? '#10b981' : '#ef4444' }}>{currentVerse.address}</span></p>
+                      <p style={styles.feedbackTextLabel}>본문:</p>
+                      {/* feedbackCorrectText 스타일 적용을 위해 className 추가 */}
+                      <p style={styles.feedbackCorrectText} className="feedback-correct-text">{currentVerse.text}</p>
+                    </div>
+                    {feedbackMessage && (
+                      <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        borderRadius: '0.375rem',
+                        fontWeight: '600',
+                        backgroundColor: (isCorrectText && isCorrectAddress) ? '#d1fae5' : '#fee2e2', /* bg-green-100 / bg-red-100 */
+                        color: (isCorrectText && isCorrectAddress) ? '#065f46' : '#991b1b', /* text-green-700 / text-red-700 */
+                      }}>
+                        {feedbackMessage}
+                      </div>
+                    )}
+
+                    {/* '특정 구절' 모드에서는 '연습 필요', '암송 완료' 버튼을 숨깁니다. */}
+                    {mode !== 'SPECIFIC' && (
+                      <div style={styles.practiceButtonContainer}>
+                        <button
+                          onClick={handleNeedsPractice}
+                          className="action-button practice-needed"
+                        >
+                          연습 필요
+                        </button>
+                        <button
+                          onClick={handleRecitationComplete}
+                          className="action-button recitation-complete"
+                        >
+                          암송 완료
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={styles.noVerseMessage}>
+                선택된 모드에 해당하는 구절이 없습니다.
+              </div>
+            )
+          )}
+        </main>
+      </div>
+    </>
   );
 };
 
@@ -814,7 +1024,7 @@ const styles = {
     borderRadius: '0.375rem', // rounded-md
     border: '1px solid #e5e7eb', // border-gray-200
     color: '#374151', // text-gray-800
-    whiteSpace: 'pre-wrap', // preserves whitespace and line breaks
+    whiteSpace: 'pre-wrap' as 'pre-wrap', // preserves whitespace and line breaks
   },
   practiceButtonContainer: {
     display: 'flex',
@@ -861,6 +1071,16 @@ const styles = {
     marginBottom: '1.5rem',
     color: '#1f2937', // text-gray-900
   },
+  // 파트 선택 버튼 컨테이너
+  partSelectionContainer: {
+    display: 'flex',
+    flexWrap: 'wrap' as 'wrap',
+    justifyContent: 'center',
+    gap: '0.5rem', // gap-2
+    marginBottom: '1.5rem', // mb-6
+    width: '100%',
+    maxWidth: '800px',
+  },
   verseGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', // 반응형 그리드
@@ -899,3 +1119,4 @@ const styles = {
 };
 
 export default App;
+
