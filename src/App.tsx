@@ -466,19 +466,19 @@ const App: React.FC = () => {
                 </button>
             </div>
             <div className="verse-grid">
+              {/* ✨ 수정된 부분: div를 label로 바꾸고, 안의 label을 span으로 변경! */}
               {allVerses.map(verse => (
-                <div key={verse.id} className="verse-select-item">
+                <label key={verse.id} className="verse-select-item" style={{ cursor: 'pointer' }}>
                   <input
                     type="checkbox"
-                    id={`verse-${verse.id}`}
                     checked={selectedSpecificVerses.includes(verse.id)}
                     onChange={() => handleToggleSpecificVerse(verse.id)}
                     className="checkbox-input"
                   />
-                  <label htmlFor={`verse-${verse.id}`} className="verse-label">
+                  <span className="verse-label">
                     {verse.id}
-                  </label>
-                </div>
+                  </span>
+                </label>
               ))}
             </div>
             <button
