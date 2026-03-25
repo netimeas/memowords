@@ -180,6 +180,16 @@ const sortVersesById = (a: Verse, b: Verse) => {
   return numA - numB;
 };
 
+// ✨ 완벽한 무작위 셔플 알고리즘 (Fisher-Yates Shuffle)
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 // App 컴포넌트 정의
 const App: React.FC = () => {
   const [mode, setMode] = useState<'PLTC' | 'LTC' | 'SPECIFIC'>('PLTC');
@@ -223,7 +233,8 @@ const App: React.FC = () => {
       if (practiceMode) {
         setCurrentPracticeVerses(verses);
       } else {
-        const shuffledVerses = [...verses].sort(() => 0.5 - Math.random());
+        // ✨ 수정된 부분: 공평한 확률의 셔플 함수 사용
+        const shuffledVerses = shuffleArray(verses);
         const selectedAndSortedVerses = shuffledVerses.slice(0, 10).sort(sortVersesById);
         setCurrentPracticeVerses(selectedAndSortedVerses);
       }
@@ -313,9 +324,7 @@ const App: React.FC = () => {
 
     if (textContentMatch && addressMatch) {
       setFeedbackMessage('정답과 일치합니다.');
-      if (practiceMode) { 
-        setNeedsPracticeVerses(prev => prev.filter(v => v.id !== currentVerse.id));
-      }
+      setNeedsPracticeVerses(prev => prev.filter(v => v.id !== currentVerse.id));
     } else {
       const { nodes: textDiffNodes, errorCount: diffErrorCount } = getDiff(currentVerse.text, userInputText);
       diffNodesForResults = textDiffNodes;
@@ -328,7 +337,7 @@ const App: React.FC = () => {
         </>
       );
 
-      if (practiceMode && !needsPracticeVerses.some(v => v.id === currentVerse.id)) {
+      if (!needsPracticeVerses.some(v => v.id === currentVerse.id)) {
         setNeedsPracticeVerses(prev => [...prev, currentVerse]);
       }
     }
@@ -372,14 +381,10 @@ const App: React.FC = () => {
     if (currentVerseIndex < currentPracticeVerses.length - 1) {
       setCurrentVerseIndex(prev => prev + 1);
     } else {
-      if (practiceMode) {
-        if (needsPracticeVerses.length > 0) {
-          setCurrentPracticeVerses(needsPracticeVerses);
-          setNeedsPracticeVerses([]);
-          setCurrentVerseIndex(0);
-        } else {
-          setShowSummary(true);
-        }
+      if (needsPracticeVerses.length > 0) {
+        setCurrentPracticeVerses(needsPracticeVerses);
+        setNeedsPracticeVerses([]);
+        setCurrentVerseIndex(0);
       } else {
         setShowSummary(true);
       }
@@ -466,7 +471,6 @@ const App: React.FC = () => {
                 </button>
             </div>
             <div className="verse-grid">
-              {/* ✨ 수정된 부분: div를 label로 바꾸고, 안의 label을 span으로 변경! */}
               {allVerses.map(verse => (
                 <label key={verse.id} className="verse-select-item" style={{ cursor: 'pointer' }}>
                   <input
@@ -573,29 +577,27 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  {practiceMode && (
-                    <div className="practice-button-container">
-                      <button
-                        onClick={handleNeedsPractice}
-                        className="action-button practice-needed"
-                      >
-                        연습 필요
-                      </button>
-                      <button
-                        onClick={handlePracticeAgain}
-                        className="action-button"
-                        style={{ backgroundColor: '#8b5cf6' }}
-                      >
-                        다시 연습
-                      </button>
-                      <button
-                        onClick={handleRecitationComplete}
-                        className="action-button recitation-complete"
-                      >
-                        암송 완료
-                      </button>
-                    </div>
-                  )}
+                  <div className="practice-button-container">
+                    <button
+                      onClick={handleNeedsPractice}
+                      className="action-button practice-needed"
+                    >
+                      연습 필요
+                    </button>
+                    <button
+                      onClick={handlePracticeAgain}
+                      className="action-button"
+                      style={{ backgroundColor: '#8b5cf6' }}
+                    >
+                      다시 연습
+                    </button>
+                    <button
+                      onClick={handleRecitationComplete}
+                      className="action-button recitation-complete"
+                    >
+                      암송 완료
+                    </button>
+                  </div>
                 </div>
               )}
             </>
