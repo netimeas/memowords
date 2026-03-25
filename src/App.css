@@ -1,0 +1,373 @@
+/* App.css */
+
+/* 폰트 임포트 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* 전역 스타일 */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* ---------------- 레이아웃 & 컨테이너 ---------------- */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.header-container {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-content {
+  width: 100%;
+  max-width: 960px;
+  background-color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border-radius: 0.75rem;
+  padding: 2rem;
+}
+
+/* ---------------- 타이포그래피 & 텍스트 ---------------- */
+.header-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.current-verse-id {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.current-verse-id-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.current-verse-id-number {
+  color: #2563eb;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.no-verse-message {
+  text-align: center;
+  font-size: 1.25rem;
+  color: #4b5563;
+}
+
+/* ---------------- 버튼 스타일 ---------------- */
+.header-button-container {
+  display: flex;
+  gap: 1rem;
+}
+
+.reset-button-wrapper {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+}
+
+.header-button {
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+.header-button.active {
+  background-color: #2563eb;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.header-button.inactive {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+.header-button.inactive:hover {
+  background-color: #e0f2fe;
+}
+
+.mode-selection-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.mode-button {
+  padding: 12px 32px;
+  border-radius: 9999px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  transform: scale(1);
+  border: none;
+  cursor: pointer;
+}
+.mode-button:hover {
+  transform: scale(1.05);
+}
+.mode-button.practice-active {
+  background-color: #16a34a;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.mode-button.practice-inactive {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+.mode-button.practice-inactive:hover {
+  background-color: #d1fae5;
+}
+.mode-button.real-active {
+  background-color: #9333ea;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.mode-button.real-inactive {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+.mode-button.real-inactive:hover {
+  background-color: #f3e8ff;
+}
+
+.action-button-container, .practice-button-container {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.practice-button-container {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.action-button {
+  padding: 12px 32px;
+  font-weight: 700;
+  border-radius: 9999px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  transform: scale(1);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.action-button:hover {
+  transform: scale(1.05);
+}
+.action-button.complete { background-color: #2563eb; }
+.action-button.complete:hover { background-color: #1d4ed8; }
+.action-button.reset { background-color: #6b7280; padding: 8px 16px; font-size: 0.875rem; }
+.action-button.reset:hover { background-color: #4b5563; }
+.action-button.practice-needed { background-color: #f59e0b; }
+.action-button.practice-needed:hover { background-color: #d97706; }
+.action-button.recitation-complete { background-color: #10b981; }
+.action-button.recitation-complete:hover { background-color: #059669; }
+
+/* ---------------- 입력 폼 스타일 ---------------- */
+.input-group {
+  margin-bottom: 1.5rem;
+}
+
+.input-label {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box; /* 패딩 포함 너비 계산 */
+  font-family: 'Inter', sans-serif;
+}
+.input-field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+/* ---------------- 피드백 섹션 ---------------- */
+.feedback-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #eff6ff;
+  border-radius: 0.75rem;
+  border: 1px solid #bfdbfe;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+}
+
+.feedback-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #1e40af;
+  margin-bottom: 1rem;
+}
+
+.feedback-verse-info {
+  margin-bottom: 1rem;
+}
+
+.feedback-address, .feedback-text-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.feedback-correct-text {
+  background-color: white;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* ---------------- 특정 구절 선택 섹션 ---------------- */
+.specific-verse-selection-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f9fafb;
+  border-radius: 0.75rem;
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.specific-verse-selection-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  color: #1f2937;
+}
+
+.part-selection-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+}
+
+.part-button {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  color: #374151;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.part-button:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+.part-button.all {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+.part-button.all:hover {
+  background-color: #bfdbfe;
+}
+
+.verse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+.verse-select-item {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.verse-select-item:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.checkbox-input {
+  margin-right: 0.5rem;
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.verse-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* ---------------- 요약(결과) 섹션 ---------------- */
+.summary-container {
+  text-align: center;
+}
+
+.summary-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  text-align: left; /* 보기 좋게 왼쪽 정렬 추가 */
+}
+
+.summary-item-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0; /* 기본 마진 제거 */
+}
