@@ -2,11 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import { Verse, allVerses } from './verses';
 
-// 텍스트 정규화 헬퍼 함수
-const normalizeText = (text: string) => {
-  return text.replace(/[\s.,!?;:"'‘’“”`()\[\]{}]/g, '').toLowerCase();
-};
-
 // 주소 정규화 헬퍼 함수
 const normalizeAddress = (address: string) => {
   let normalized = address
@@ -47,7 +42,7 @@ const normalizeAddress = (address: string) => {
 
 // 문장 부호 확인 헬퍼 함수
 const isPunctuation = (char: string) => {
-  return /[.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+\-=|_\\/`]/u.test(char);
+  return /[.,!?;:"'‘’“”`()[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+\-=|_\\/`]/u.test(char);
 };
 
 // 텍스트 비교 및 차이점 반환 함수
@@ -68,11 +63,13 @@ const getDiff = (original: string, user: string): { nodes: (string | React.React
     const isOriginalPunct = isPunctuation(originalChar);
     const isUserPunct = isPunctuation(userChar);
 
-    if (originalPtr < original.length && userPtr < user.length &&
-        (isOriginalSpace && isUserSpace ||
-         (!isOriginalSpace && !isOriginalPunct && !isUserSpace && !isUserPunct && originalChar.toLowerCase() === userChar.toLowerCase()) ||
-         (isOriginalPunct && isUserPunct && originalChar === userChar))) 
-    {
+    if (
+      originalPtr < original.length &&
+      userPtr < user.length &&
+      ((isOriginalSpace && isUserSpace) ||
+        (!isOriginalSpace && !isOriginalPunct && !isUserSpace && !isUserPunct && originalChar.toLowerCase() === userChar.toLowerCase()) ||
+        (isOriginalPunct && isUserPunct && originalChar === userChar))
+    ) {
       nodes.push(originalChar);
       originalPtr++;
       userPtr++;
@@ -194,7 +191,6 @@ const App: React.FC = () => {
   const [isCorrectAddress, setIsCorrectAddress] = useState(false);
   const [isCorrectText, setIsCorrectText] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<React.ReactNode | string>('');
-  const [errorCharCount, setErrorCharCount] = useState(0);
   const [needsPracticeVerses, setNeedsPracticeVerses] = useState<Verse[]>([]);
   const [currentPracticeVerses, setCurrentPracticeVerses] = useState<Verse[]>([]);
   const [testResults, setTestResults] = useState<{ id: string; correct: boolean; diff: (string | React.ReactNode)[] }[]>([]);
@@ -243,7 +239,6 @@ const App: React.FC = () => {
     setIsCorrectAddress(false);
     setIsCorrectText(false);
     setFeedbackMessage('');
-    setErrorCharCount(0);
     addressInputRef.current?.focus();
   };
 
@@ -306,8 +301,8 @@ const App: React.FC = () => {
     const normalizedUserAddress = normalizeAddress(userInputAddress);
     
     const addressMatch = normalizedCorrectAddress === normalizedUserAddress;
-    const contentCorrectText = currentVerse.text.replace(/[\s.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
-    const contentUserText = userInputText.replace(/[\s.,!?;:"'‘’“”`()\[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
+    const contentCorrectText = currentVerse.text.replace(/[\s.,!?;:"'‘’“”`()[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
+    const contentUserText = userInputText.replace(/[\s.,!?;:"'‘’“”`()[\]{}<>\u2000-\u206F\u2E00-\u2E7F\u3000-\u303F\uFF00-\uFFEF~!@#$%^&*+-=|\\/`_]/gu, '').toLowerCase();
     const textContentMatch = contentCorrectText === contentUserText;
 
     setIsCorrectAddress(addressMatch);
@@ -318,8 +313,6 @@ const App: React.FC = () => {
 
     if (textContentMatch && addressMatch) {
       setFeedbackMessage('정답과 일치합니다.');
-      setErrorCharCount(0);
-      // 이제 모든 모드(특정 구절 포함)에서 practiceMode가 동작하도록 변경
       if (practiceMode) { 
         setNeedsPracticeVerses(prev => prev.filter(v => v.id !== currentVerse.id));
       }
@@ -334,14 +327,12 @@ const App: React.FC = () => {
           <p style={{ marginTop: '1rem', fontWeight: 'bold', color: '#dc2626' }}>틀린 글자 수: {diffErrorCount}</p>
         </>
       );
-      setErrorCharCount(diffErrorCount);
 
       if (practiceMode && !needsPracticeVerses.some(v => v.id === currentVerse.id)) {
         setNeedsPracticeVerses(prev => [...prev, currentVerse]);
       }
     }
 
-    // 결과 요약 최신화 (같은 구절을 다시 연습하면 이전 결과를 덮어씌움)
     setTestResults(prev => {
       const existingIndex = prev.findIndex(r => r.id === currentVerse.id);
       const newResult = { id: currentVerse.id, correct: (addressMatch && textContentMatch), diff: diffNodesForResults };
@@ -354,7 +345,6 @@ const App: React.FC = () => {
     });
   };
 
-  // ✨ 추가된 함수: 현재 구절을 지우고 다시 시도하게 함
   const handlePracticeAgain = () => {
     resetInputs(); 
   };
@@ -382,7 +372,7 @@ const App: React.FC = () => {
     if (currentVerseIndex < currentPracticeVerses.length - 1) {
       setCurrentVerseIndex(prev => prev + 1);
     } else {
-      if (practiceMode) { // 모든 모드에서 practiceMode 라운드 로직 적용
+      if (practiceMode) {
         if (needsPracticeVerses.length > 0) {
           setCurrentPracticeVerses(needsPracticeVerses);
           setNeedsPracticeVerses([]);
@@ -428,7 +418,6 @@ const App: React.FC = () => {
             LTC
           </button>
           <button
-            // 특정 구절 모드로 갈 때도 명시적으로 practiceMode를 true로 세팅해서 항상 연습 모드처럼 동작하도록 함
             onClick={() => { setMode('SPECIFIC'); setPracticeMode(true); }} 
             className={`header-button ${mode === 'SPECIFIC' ? 'active' : 'inactive'}`}
           >
@@ -584,7 +573,6 @@ const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* ✨ 모든 모드의 연습 상태에서 동일한 버튼 표시 */}
                   {practiceMode && (
                     <div className="practice-button-container">
                       <button
@@ -596,7 +584,7 @@ const App: React.FC = () => {
                       <button
                         onClick={handlePracticeAgain}
                         className="action-button"
-                        style={{ backgroundColor: '#8b5cf6' }} /* 보라색 계열 지정 */
+                        style={{ backgroundColor: '#8b5cf6' }}
                       >
                         다시 연습
                       </button>
